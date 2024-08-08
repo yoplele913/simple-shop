@@ -86,6 +86,13 @@
         AWS.config.credentials = new AWS.CognitoIdentityCredentials({
             IdentityPoolId: 'us-east-1:3cce83fd-2e15-48d2-9c0a-75246b816911'
         });
+        AWS.config.credentials.get(function(err) {
+          if (err) {
+             console.error('Error loading credentials:', err);
+             return;
+          } else {
+              console.log('Credentials loaded successfully');
+          }
 
         async function uploadFile() {
             const file = document.getElementById('fileInput').files[0];
