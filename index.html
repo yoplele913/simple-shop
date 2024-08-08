@@ -5,71 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Your File</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            background: url('https://example.com/your-background-image.jpg') no-repeat center center fixed;
-            background-size: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            text-align: center;
-        }
-
-        .overlay {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
-            width: 100%;
-        }
-
-        h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
-            color: #f1c40f;
-        }
-
-        p {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-        }
-
-        input[type="file"] {
-            padding: 10px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            display: block;
-            width: 100%;
-        }
-
-        button {
-            padding: 12px 20px;
-            font-size: 1em;
-            color: #fff;
-            background-color: #e74c3c;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        button:hover {
-            background-color: #c0392b;
-        }
-
-        .message {
-            margin-top: 20px;
-            font-size: 1em;
-        }
+        /* 스타일 설정 */
     </style>
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.774.0.min.js"></script>
 </head>
 <body>
     <div class="overlay">
@@ -81,22 +18,7 @@
     </div>
 
     <script>
-        // AWS 설정 초기화
-        AWS.config.region = 'us-east-1'; // 예: us-east-1
-        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: 'us-east-1:3cce83fd-2e15-48d2-9c0a-75246b816911'
-        });
-    
-
-	AWS.config.credentials.get(function(err) {
-          if (err) {
-             console.error('Error loading credentials:', err);
-             return;
-          } else {
-              console.log('Credentials loaded successfully');
-          }
-
-          async function uploadFile() {
+        async function uploadFile() {
             const file = document.getElementById('fileInput').files[0];
             const messageDiv = document.getElementById('message');
             
@@ -110,32 +32,47 @@
                 messageDiv.textContent = "Uploading...";
                 messageDiv.style.color = "white";
 
-                // S3 객체 생성
-                const s3 = new AWS.S3({
-                    apiVersion: '2006-03-01',
-                    params: { Bucket: 'uploadbucketb2o2' }
+                // AWS 설정 초기화
+                AWS.config.region = 'us-east-1'; // 예: us-east-1
+                AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                    IdentityPoolId: 'us-east-1:3cce83fd-2e15-48d2-9c0a-75246b816911'
                 });
 
-                // S3에 파일 업로드
-                const params = {
-                    Bucket: 'uploadbucketb2o2',
-                    Key: file.name,
-                    Body: file,
-                    ContentType: file.type
-                };
-
-                s3.upload(params, function(err, data) {
+                // 자격 증명 로드
+                AWS.config.credentials.get(function(err) {
                     if (err) {
-                        console.error('Upload failed:', err);
-                        messageDiv.textContent = "File upload failed. Error: " + err.message;
-                        messageDiv.style.color = "red";
+                        console.error('Error loading credentials:', err);
+                        return;
                     } else {
-                        console.log('Upload succeeded:', data);
-                        messageDiv.textContent = "File uploaded successfully!";
-                        messageDiv.style.color = "green";
+                        console.log('Credentials loaded successfully');
+
+                        const s3 = new AWS.S3({
+                            apiVersion: '2006-03-01',
+                            params: { Bucket: 'uploadbucketb2o2' }
+                        });
+
+                        const params = {
+                            Bucket: 'uploadbucketb2o2',
+                            Key: file.name,
+                            Body: file,
+                            ContentType: file.type
+                        };
+
+                        s3.upload(params, function(err, data) {
+                            if (err) {
+                                console.error('Upload failed:', err);
+                                messageDiv.textContent = "File upload failed. Error: " + err.message;
+                                messageDiv.style.color = "red";
+                            } else {
+                                console.log('Upload succeeded:', data);
+                                messageDiv.textContent = "File uploaded successfully!";
+                                messageDiv.style.color = "green";
+                            }
+                        });
                     }
                 });
             } catch (error) {
+                console.error('Error in upload process:', error);
                 messageDiv.textContent = "Error: " + error.message;
                 messageDiv.style.color = "red";
             }
