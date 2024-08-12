@@ -69,7 +69,6 @@
             font-size: 1em;
         }
     </style>
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.774.0.min.js"></script>
 </head>
 <body>
     <div class="overlay">
@@ -81,12 +80,6 @@
     </div>
 
     <script>
-        // AWS 설정 초기화
-        AWS.config.region = 'us-east-1'; // 예: us-east-1
-        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: 'us-east-1:68a82c01-30b8-45e8-83a9-647fe1279add'
-        });
-
         async function uploadFile() {
             const file = document.getElementById('fileInput').files[0];
             const messageDiv = document.getElementById('message');
@@ -101,32 +94,41 @@
                 messageDiv.textContent = "Uploading...";
                 messageDiv.style.color = "white";
 
-                // S3 객체 생성
-                const s3 = new AWS.S3({
-                    apiVersion: '2006-03-01',
-                    params: { Bucket: 'uploadbucketb2o2' }
+                // API Gateway URL 설정
+                const apiUrl = 'https://tc4rhk3c0b.execute-api.us-east-1.amazonaws.com/default/getPresignedURL';
+
+                // 프리사인드 URL을 얻기 위해 API 호출
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fileName: file.name,
+                        fileType: file.type
+                    })
                 });
 
-                // S3에 파일 업로드
-                const params = {
-                    Bucket: 'uploadbucketb2o2',
-                    Key: file.name,
-                    Body: file,
-                    ContentType: file.type
-                };
+                const data = await response.json();
+                const uploadURL = JSON.parse(data).uploadURL;
 
-                s3.upload(params, function(err, data) {
-                    if (err) {
-                        console.error('Upload failed:', err);
-                        messageDiv.textContent = "File upload failed. Error: " + err.message;
-                        messageDiv.style.color = "red";
-                    } else {
-                        console.log('Upload succeeded:', data);
-                        messageDiv.textContent = "File uploaded successfully!";
-                        messageDiv.style.color = "green";
-                    }
+                // 프리사인드 URL을 사용해 S3에 파일 업로드
+                const uploadResponse = await fetch(uploadURL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': file.type
+                    },
+                    body: file
                 });
+
+                if (uploadResponse.ok) {
+                    messageDiv.textContent = "File uploaded successfully!";
+                    messageDiv.style.color = "green";
+                } else {
+                    throw new Error('Upload failed');
+                }
             } catch (error) {
+                console.error('Error:', error);
                 messageDiv.textContent = "Error: " + error.message;
                 messageDiv.style.color = "red";
             }
