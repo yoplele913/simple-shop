@@ -13,7 +13,7 @@
     <button onclick="uploadFile()">Upload</button>
     
     <script>
-        AWS.config.region = 'us-west-1'; // e.g. 'us-west-2'
+        AWS.config.region = 'us-east-1'; // e.g. 'us-west-2'
         AWS.config.credentials = new AWS.CognitoIdentityCredentials({
             IdentityPoolId: 'us-east-1:97a29695-2552-4513-926d-66e1a8bc8b9b'
         });
@@ -32,7 +32,7 @@
             }
 
             const params = {
-                Bucket: 'YOUR_BUCKET_NAME',
+                Bucket: 'uploadbucketb2o2',
                 Key: file.name,
                 Body: file,
                 ContentType: file.type
